@@ -9,6 +9,7 @@ const server = new WebSocketServer({port,host: "0.0.0.0",})
 
 
 type IncomingMessage = {
+    type?:string,
     content:string,
     senderId:string,
     chatId:string
@@ -44,8 +45,27 @@ server.on("connection",(socket:ConnectedClient, request)=>{
     socket.on("message",async (receivedData)=>{
         try {
             const data:IncomingMessage = JSON.parse(receivedData.toString());
+            
+            if(data.type==="typing"){
+                for (const client of server.clients as Set<ConnectedClient>){
+                    const shouldReceiveMessage = client.readyState === WebSocket.OPEN && client.chatId === chatId
 
-            const validationResult = messageValidationSchema.safeParse({content:data.content, senderId:data.senderId, chatId:data.chatId})
+                    if(shouldReceiveMessage){
+                        client.send(JSON.stringify({
+                            success:true,
+                            type:"typing",
+                            senderId:data.senderId
+                        }))
+                    }
+                }
+                
+                return
+            }
+
+
+
+
+            const validationResult = messageValidationSchema.safeParse({type:data.type, content:data.content, senderId:data.senderId, chatId:data.chatId})
 
             if(!validationResult.success){
                 socket.send(JSON.stringify({
@@ -76,6 +96,9 @@ server.on("connection",(socket:ConnectedClient, request)=>{
 
                 return
             }
+            
+
+
 
             const messageId = randomUUID()
 
