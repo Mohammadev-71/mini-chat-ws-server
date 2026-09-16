@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import WebSocket, { WebSocketServer } from "ws";
 import { pool } from "./db.js";
 import { messageValidationSchema } from "./validation.js";
-const port  = Number(process.env.WS_PORT)
+const port  = Number(process.env.PORT)
 
 const server = new WebSocketServer({port,host: "0.0.0.0",})
 
